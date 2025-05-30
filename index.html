@@ -18,6 +18,14 @@
     const SERVICE_UUID = '4fafc201-1fb5-459e-8fcc-c5c9c331914b';
     const CHARACTERISTIC_UUID = 'beb5483e-36e1-4688-b7f5-ea07361b26a8';
 
+    const PlantCard = ({ name, image, properties }) => (
+      <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+        <img src={image} alt={name} className="w-full h-48 object-cover rounded-md mb-2" />
+        <h3 className="text-lg font-bold">{name}</h3>
+        <p className="text-sm text-gray-600">{properties}</p>
+      </div>
+    );
+
     const App = () => {
       const [device, setDevice] = useState(null);
       const [data, setData] = useState({
@@ -29,7 +37,9 @@
       const [history, setHistory] = useState([]);
       const [isConnected, setIsConnected] = useState(false);
       const [error, setError] = useState('');
+      const [searchTerm, setSearchTerm] = useState('');
 
+      // Cargar historial desde localStorage
       useEffect(() => {
         const storedHistory = localStorage.getItem('history');
         if (storedHistory) {
@@ -37,10 +47,12 @@
         }
       }, []);
 
+      // Guardar historial en localStorage
       useEffect(() => {
         localStorage.setItem('history', JSON.stringify(history));
       }, [history]);
 
+      // Conectar al dispositivo BLE
       const connectToDevice = async () => {
         try {
           const device = await navigator.bluetooth.requestDevice({
@@ -67,6 +79,7 @@
         }
       };
 
+      // Desconectar del dispositivo
       const disconnectDevice = async () => {
         if (device && device.gatt.connected) {
           device.gatt.disconnect();
@@ -75,6 +88,24 @@
           setData({ humidity: '--', temperature: '--', ambientHumidity: '--', light: '--' });
         }
       };
+
+      // Lista de plantas (puedes personalizarla)
+      const plants = [
+        { name: 'Aloe Vera', image: 'https://placehold.co/300x200', properties: 'Propiedades: Alivia quemaduras. Cuidados: Luz brillante, riego escaso.' },
+        { name: 'Pothos', image: 'https://placehold.co/300x200', properties: 'Propiedades: Purifica el aire. Cuidados: Luz baja a media, riego moderado.' },
+        { name: 'Snake Plant', image: 'https://placehold.co/300x200', properties: 'Propiedades: Resiste poca luz. Cuidados: Riego mínimo, luz indirecta.' },
+        { name: 'Peace Lily', image: 'https://placehold.co/300x200', properties: 'Propiedades: Mejora la humedad. Cuidados: Luz indirecta, riego regular.' },
+        { name: 'Spider Plant', image: 'https://placehold.co/300x200', properties: 'Propiedades: Fácil propagación. Cuidados: Luz media, riego moderado.' },
+        { name: 'ZZ Plant', image: 'https://placehold.co/300x200', properties: 'Propiedades: Muy resistente. Cuidados: Luz baja, riego escaso.' },
+        { name: 'Monstera', image: 'https://placehold.co/300x200', properties: 'Propiedades: Decorativa. Cuidados: Luz brillante indirecta, riego moderado.' },
+        { name: 'Jade Plant', image: 'https://placehold.co/300x200', properties: 'Propiedades: Buena suerte. Cuidados: Luz brillante, riego escaso.' },
+        { name: 'Rubber Plant', image: 'https://placehold.co/300x200', properties: 'Propiedades: Purifica aire. Cuidados: Luz media, riego moderado.' },
+        { name: 'Philodendron', image: 'https://placehold.co/300x200', properties: 'Propiedades: Fácil cuidado. Cuidados: Luz baja a media, riego regular.' },
+      ];
+
+      const filteredPlants = plants.filter(plant =>
+        plant.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
 
       return (
         <div className="min-h-screen bg-gray-100 p-4">
@@ -94,7 +125,7 @@
             {isConnected ? 'Desconectar' : 'Conectar'}
           </button>
           <h2 className="text-xl font-bold my-4">Historial</h2>
-          <div className="space-y-2">
+          <div className="space-y-2 mb-4">
             {history.map((item, index) => (
               <div key={index} className="bg-white p-2 rounded shadow">
                 <p className="text-sm text-gray-600">{new Date(item.timestamp).toLocaleString()}</p>
@@ -103,6 +134,19 @@
                 <p>Humedad ambiental: {item.ambientHumidity}%</p>
                 <p>Luz: {item.light} lx</p>
               </div>
+            ))}
+          </div>
+          <h2 className="text-xl font-bold my-4">Buscar plantas</h2>
+          <input
+            type="text"
+            className="w-full p-2 mb-4 border rounded"
+            placeholder="Busca una planta..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredPlants.map((plant, index) => (
+              <PlantCard key={index} name={plant.name} image={plant.image} properties={plant.properties} />
             ))}
           </div>
         </div>
